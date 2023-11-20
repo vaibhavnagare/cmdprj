@@ -7,21 +7,14 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
-
+    permissions:
+      pull-requests: read
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: tj-actions/changed-files@v40
 
-      - name: Get changed files
-        id: changes
-        run: echo "::set-output name=files::$(jq -r '.pull_request.changed_files' $GITHUB_EVENT_PATH)"
-
-      - name: Check for sysout
+      - name: List all changed files
         run: |
-          # Get changed files
-          changed_files="${{ steps.changes.outputs.files }}"
-          
-          # Look for 'sysout' in changed files
-          for file in $changed_files; do
-            grep -qi 'sysout' $file && echo "sysout found in $file"
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            echo "$file was changed"
           done
