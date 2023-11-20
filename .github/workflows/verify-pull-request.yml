@@ -1,32 +1,27 @@
-name: CI
+name: Verify Pull Request
 
 on:
   pull_request:
-    branches:
-      - main
+    types: [opened, edited, reopened]
 
 jobs:
-  # -------------------------------------------------------------
-  # Event `pull_request`: Returns all changed pull request files.
-  # --------------------------------------------------------------
-  changed_files:
-    # NOTE:
-    # - This is limited to pull_request* events and would raise an error for other events.
-    # - A maximum of 3000 files can be returned.
-    # - For more flexibility and no limitations see "Using local .git history" above.
-
-    runs-on: ubuntu-latest  # windows-latest || macos-latest
-    name: Test changed-files
-    permissions:
-      pull-requests: read
+  verify:
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@v40
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-      - name: List all changed files
+      - name: Get changed files
+        id: git_changes
+        run: echo "::set-output name=files::$(git diff --name-only HEAD^..HEAD)"
+
+      - name: Check for sysout
         run: |
-          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
-            grep -qi 'sysout' $file && echo "sysout found in $file"
+          files="${{ steps.git_changes.outputs.files }}"
+          for file in $files; do
+            if grep -q 'sysout' "$file"; then
+              echo "sysout found in $file"
+              exit 1
+            fi
           done
