@@ -21,12 +21,14 @@ jobs:
       pull-requests: read
 
     steps:
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@v40
-
-      - name: List all changed files
+      - name: Checkout (fetch last two commits) of the PR
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 2
+      - name: Process files changed in the current commit
         run: |
-          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
-            echo "$file was changed"
+          changedFiles=$(git diff --name-only HEAD^)
+          for file in $changedFiles; do
+            echo "Processing file: $file"
           done
